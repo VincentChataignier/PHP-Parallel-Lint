@@ -54,6 +54,16 @@ class ManagerRunTest extends Tester\TestCase
         Assert::true($result->hasError());
     }
 
+    public function testWithDirCoreIssue102()
+    {
+        $settings = $this->prepareSettings();
+        $settings->paths = array('examples/example-05');
+
+        $manager = $this->getManager($settings);
+        $result = $manager->run($settings);
+        Assert::true($result->hasError());
+    }
+
     public function testExcludeRelativeSubdirectory()
     {
         $settings = $this->prepareSettings();
