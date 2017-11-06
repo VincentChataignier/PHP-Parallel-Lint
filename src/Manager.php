@@ -54,7 +54,12 @@ class Manager
 
         $output->writeHeader($phpExecutable->getVersionId(), $settings->parallelJobs, $phpExecutable->getHhvmVersion());
 
-        $files = $this->getFilesFromPaths($settings->paths, $settings->extensions, $settings->excluded);
+        $files = $this->getFilesFromPaths(
+            $settings->paths,
+            $settings->extensions,
+            $settings->excluded,
+            $settings->gitChangedFiles
+        );
 
         if (empty($files)) {
             throw new Exception('No file found to check.');
@@ -153,10 +158,15 @@ class Manager
      * @param array $paths
      * @param array $extensions
      * @param array $excluded
+     * @param array $gitChangedFiles
      * @return array
      * @throws NotExistsPathException
      */
-    protected function getFilesFromPaths(array $paths, array $extensions, array $excluded = array())
+    protected function getFilesFromPaths(
+        array $paths,
+        array $extensions,
+        array $excluded = array(),
+        array $gitChangedFiles = array())
     {
         $extensions = array_flip($extensions);
         $files = array();
@@ -167,7 +177,10 @@ class Manager
             } else if (is_dir($path)) {
                 $iterator = new \RecursiveDirectoryIterator($path, \FilesystemIterator::SKIP_DOTS);
                 if (!empty($excluded)) {
-                    $iterator = new RecursiveDirectoryFilterIterator($iterator, $excluded);
+                    $iterator = new RecursiveDirectoryExcludedFilterIterator($iterator, $excluded);
+                }
+                if (!empty($gitChangedFiles)) {
+                    $iterator = new RecursiveDirectoryChangedFilesFilterIterator($iterator, $gitChangedFiles);
                 }
                 $iterator = new \RecursiveIteratorIterator(
                     $iterator,
@@ -192,11 +205,51 @@ class Manager
     }
 }
 
-class RecursiveDirectoryFilterIterator extends \RecursiveFilterIterator
+abstract class AbstractRecursiveDirectoryFilterIterator extends \RecursiveFilterIterator
 {
     /** @var \RecursiveDirectoryIterator */
-    private $iterator;
+    protected $iterator;
 
+    /**
+     * (PHP 5 &gt;= 5.1.0)<br/>
+     * Check whether the inner iterator's current element has children
+     *
+     * @link http://php.net/manual/en/recursivefilteriterator.haschildren.php
+     * @return bool true if the inner iterator has children, otherwise false
+     */
+    public function hasChildren()
+    {
+        return $this->iterator->hasChildren();
+    }
+
+    /**
+     * @param string $file
+     * @return string
+     */
+    protected function getPathname($file)
+    {
+        $file = $this->normalizeDirectorySeparator($file);
+
+        if ('.' . DIRECTORY_SEPARATOR !== $file[0] . $file[1]) {
+            $file = '.' . DIRECTORY_SEPARATOR . $file;
+        }
+
+        $directoryFile = new \SplFileInfo($file);
+        return $directoryFile->getPathname();
+    }
+
+    /**
+     * @param string $file
+     * @return string
+     */
+    protected function normalizeDirectorySeparator($file)
+    {
+        return str_replace(array('\\', '/'), DIRECTORY_SEPARATOR, $file);
+    }
+}
+
+class RecursiveDirectoryExcludedFilterIterator extends AbstractRecursiveDirectoryFilterIterator
+{
     /** @var array */
     private $excluded = array();
 
@@ -232,14 +285,50 @@ class RecursiveDirectoryFilterIterator extends \RecursiveFilterIterator
 
     /**
      * (PHP 5 &gt;= 5.1.0)<br/>
-     * Check whether the inner iterator's current element has children
+     * Return the inner iterator's children contained in a RecursiveFilterIterator
      *
-     * @link http://php.net/manual/en/recursivefilteriterator.haschildren.php
-     * @return bool true if the inner iterator has children, otherwise false
+     * @link http://php.net/manual/en/recursivefilteriterator.getchildren.php
+     * @return \RecursiveFilterIterator containing the inner iterator's children.
      */
-    public function hasChildren()
+    public function getChildren()
     {
-        return $this->iterator->hasChildren();
+        return new self($this->iterator->getChildren(), $this->excluded);
+    }
+}
+
+class RecursiveDirectoryChangedFilesFilterIterator extends AbstractRecursiveDirectoryFilterIterator
+{
+    /** @var array */
+    private $changedFiles = array();
+
+    /**
+     * @param \RecursiveDirectoryIterator $iterator
+     * @param array $changedFiles
+     */
+    public function __construct(\RecursiveDirectoryIterator $iterator, array $changedFiles)
+    {
+        parent::__construct($iterator);
+        $this->iterator = $iterator;
+        $this->changedFiles = array_map(array($this, 'getPathname'), $changedFiles);
+    }
+
+    /**
+     * (PHP 5 &gt;= 5.1.0)<br/>
+     * Check whether the current element of the iterator is acceptable
+     *
+     * @link http://php.net/manual/en/filteriterator.accept.php
+     * @return bool true if the current element is acceptable, otherwise false.
+     */
+    public function accept()
+    {
+        $current = $this->current()->getPathname();
+        $current = $this->normalizeDirectorySeparator($current);
+
+        if ('.' . DIRECTORY_SEPARATOR !== $current[0] . $current[1]) {
+            $current = '.' . DIRECTORY_SEPARATOR . $current;
+        }
+
+        return in_array($current, $this->changedFiles);
     }
 
     /**
@@ -251,31 +340,6 @@ class RecursiveDirectoryFilterIterator extends \RecursiveFilterIterator
      */
     public function getChildren()
     {
-        return new self($this->iterator->getChildren(), $this->excluded);
-    }
-
-    /**
-     * @param string $file
-     * @return string
-     */
-    private function getPathname($file)
-    {
-        $file = $this->normalizeDirectorySeparator($file);
-
-        if ('.' . DIRECTORY_SEPARATOR !== $file[0] . $file[1]) {
-            $file = '.' . DIRECTORY_SEPARATOR . $file;
-        }
-
-        $directoryFile = new \SplFileInfo($file);
-        return $directoryFile->getPathname();
-    }
-
-    /**
-     * @param string $file
-     * @return string
-     */
-    private function normalizeDirectorySeparator($file)
-    {
-        return str_replace(array('\\', '/'), DIRECTORY_SEPARATOR, $file);
+        return new self($this->iterator->getChildren(), $this->changedFiles);
     }
 }

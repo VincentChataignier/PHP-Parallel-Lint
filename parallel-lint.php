@@ -20,24 +20,25 @@ function showOptions()
 {
 ?>
 Options:
-    -p <php>        Specify PHP-CGI executable to run (default: 'php').
-    -s, --short     Set short_open_tag to On (default: Off).
-    -a, -asp        Set asp_tags to On (default: Off).
-    -e <ext>        Check only files with selected extensions separated by comma.
-                    (default: php,php3,php4,php5,phtml)
-    --exclude       Exclude a file or directory. If you want exclude multiple items,
-                    use multiple exclude parameters.
-    -j <num>        Run <num> jobs in parallel (default: 10).
-    --colors        Enable colors in console output. (disables auto detection of color support)
-    --no-colors     Disable colors in console output.
-    --no-progress   Disable progress in console output.
-    --json          Output results as JSON string (require PHP 5.4).
-    --blame         Try to show git blame for row with error.
-    --git <git>     Path to Git executable to show blame message (default: 'git').
-    --stdin         Load files and folder to test from standard input.
-    --ignore-fails  Ignore failed tests.
-    -h, --help      Print this help.
-    -V, --version   Display this application version
+    -p <php>           Specify PHP-CGI executable to run (default: 'php').
+    -s, --short        Set short_open_tag to On (default: Off).
+    -a, -asp           Set asp_tags to On (default: Off).
+    -e <ext>           Check only files with selected extensions separated by comma.
+                       (default: php,php3,php4,php5,phtml)
+    --exclude          Exclude a file or directory. If you want exclude multiple items,
+                       use multiple exclude parameters.
+    -j <num>           Run <num> jobs in parallel (default: 10).
+    --colors           Enable colors in console output. (disables auto detection of color support)
+    --no-colors        Disable colors in console output.
+    --no-progress      Disable progress in console output.
+    --json             Output results as JSON string (require PHP 5.4).
+    --blame            Try to show git blame for row with error.
+    --git <git>        Path to Git executable to show blame message (default: 'git').
+    --stdin            Load files and folder to test from standard input.
+    --ignore-fails     Ignore failed tests.
+    --only-git-changed Check only files which is changed compared to git HEAD (required git)
+    -h, --help         Print this help.
+    -V, --version      Display this application version
 <?php
 }
 
