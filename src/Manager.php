@@ -54,7 +54,12 @@ class Manager
 
         $output->writeHeader($phpExecutable->getVersionId(), $settings->parallelJobs, $phpExecutable->getHhvmVersion());
 
-        $files = $this->getFilesFromPaths($settings->paths, $settings->extensions, $settings->excluded, $settings->gitChangedFiles);
+        $files = $this->getFilesFromPaths(
+            $settings->paths,
+            $settings->extensions,
+            $settings->excluded,
+            $settings->gitChangedFiles
+        );
 
         if (empty($files)) {
             throw new Exception('No file found to check.');
@@ -157,7 +162,12 @@ class Manager
      * @return array
      * @throws NotExistsPathException
      */
-    protected function getFilesFromPaths(array $paths, array $extensions, array $excluded = array(), array $gitChangedFiles = array())
+    protected function getFilesFromPaths(
+        array $paths,
+        array $extensions,
+        array $excluded = array(),
+        array $gitChangedFiles = array()
+    )
     {
         $extensions = array_flip($extensions);
         $files = array();
