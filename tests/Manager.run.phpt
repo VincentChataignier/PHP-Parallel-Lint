@@ -54,6 +54,38 @@ class ManagerRunTest extends Tester\TestCase
         Assert::true($result->hasError());
     }
 
+    public function testOnlyChangedFiles()
+    {
+        $settings = $this->prepareSettings();
+        $settings->paths = array('examples/example-04/');
+
+        $manager = $this->getManager($settings);
+        $result = $manager->run($settings);
+        Assert::true($result->hasError());
+
+        $settings->gitChangedFiles = array('examples/example-04/index.php', 'examples/example-04/dir1/index.php');
+
+        $manager = $this->getManager($settings);
+        $result = $manager->run($settings);
+        Assert::false($result->hasError());
+    }
+
+    public function testOnlyChangedFilesWithEmptyArray()
+    {
+        $settings = $this->prepareSettings();
+        $settings->paths = array('examples/example-04/');
+
+        $manager = $this->getManager($settings);
+        $result = $manager->run($settings);
+        Assert::true($result->hasError());
+
+        $settings->gitChangedFiles = array();
+
+        $manager = $this->getManager($settings);
+        $result = $manager->run($settings);
+        Assert::true($result->hasError());
+    }
+
     public function testExcludeRelativeSubdirectory()
     {
         $settings = $this->prepareSettings();

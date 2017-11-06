@@ -124,6 +124,12 @@ class Settings
     public $ignoreFails = false;
 
     /**
+     * Array of file or directories to check because they have been changed
+     * @var bool
+     */
+    public $gitChangedFiles = array();
+
+    /**
      * @param array $paths
      */
     public function addPaths(array $paths)
@@ -140,6 +146,8 @@ class Settings
     {
         $arguments = new ArrayIterator(array_slice($arguments, 1));
         $settings = new self;
+
+        $gitChangedFilesCommand = "git --no-pager diff --name-only --diff-filter=MARC| grep -E '.php'";
 
         foreach ($arguments as $argument) {
             if ($argument{0} !== '-') {
@@ -202,6 +210,12 @@ class Settings
 
                     case '--ignore-fails':
                         $settings->ignoreFails = true;
+                        break;
+
+                    case '--only-git-changed':
+                        $gitChangedFiles = [];
+                        exec($gitChangedFilesCommand, $gitChangedFiles);
+                        $settings->gitChangedFiles = $gitChangedFiles;
                         break;
 
                     default:
