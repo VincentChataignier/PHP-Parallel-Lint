@@ -167,8 +167,7 @@ class Manager
         array $extensions,
         array $excluded = array(),
         array $gitChangedFiles = array()
-    )
-    {
+    ) {
         $extensions = array_flip($extensions);
         $files = array();
 
@@ -180,7 +179,7 @@ class Manager
                 if (!empty($excluded)) {
                     $iterator = new RecursiveDirectoryExcludedFilterIterator($iterator, $excluded);
                 }
-                if(!empty($gitChangedFiles)) {
+                if (!empty($gitChangedFiles)) {
                     $iterator = new RecursiveDirectoryChangedFilesFilterIterator($iterator, $gitChangedFiles);
                 }
                 $iterator = new \RecursiveIteratorIterator(
