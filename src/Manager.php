@@ -166,8 +166,8 @@ class Manager
         array $paths,
         array $extensions,
         array $excluded = array(),
-        array $gitChangedFiles = array()
-    ) {
+        array $gitChangedFiles = array())
+    {
         $extensions = array_flip($extensions);
         $files = array();
 
